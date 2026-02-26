@@ -469,7 +469,7 @@ export default function StoryManagement() {
             )}
           </ModalBody>
 
-          {/* ================= FOOTER ================= */}
+          {/* ================= FOOTER ================== */}
           <ModalFooter borderTop={`1px solid ${borderColor}`}>
             <Button onClick={onClose} variant="outline">
               Close
