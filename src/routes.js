@@ -30,6 +30,7 @@ import Topic from 'views/admin/topic.jsx';
 // Auth Imports
 import SignInCentered from 'views/auth/signIn';
 import { FaUsersCog, FaWallet } from 'react-icons/fa';
+import StoryManagement from 'views/admin/Story-Mangemnet/Story-managmenet';
 
 const routes = [
   {
@@ -88,6 +89,16 @@ const routes = [
         component: <Topic />,
       },
     ],
+  },
+
+  {
+    name: 'Story-Management',
+    layout: '/admin',
+    icon: (
+      <Icon as={MdSubscriptions} width="20px" height="20px" color="inherit" />
+    ),
+    path: '/story-management',
+    component: <StoryManagement />,
   },
 
   {
