@@ -26,14 +26,7 @@ import {
   VStack,
   HStack,
   Divider,
-  Stack,
   Icon,
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import Card from 'components/card/Card';
@@ -46,6 +39,7 @@ export default function StoryManagement() {
   const [modalLoading, setModalLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const [expandedStories, setExpandedStories] = useState(new Set());
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
@@ -143,6 +137,16 @@ export default function StoryManagement() {
     setSelectedUser(user);
     fetchUserStories(user._id);
     onOpen();
+  };
+
+  // toggle description expansion
+  const toggleExpand = (storyId) => {
+    setExpandedStories((prev) => {
+      const next = new Set(prev);
+      if (next.has(storyId)) next.delete(storyId);
+      else next.add(storyId);
+      return next;
+    });
   };
 
   // =============================
@@ -425,7 +429,73 @@ export default function StoryManagement() {
                           </Text>
                         </HStack>
                       )}
+
+                      {/* likes / comments counts */}
+                      <HStack spacing={4}>
+                        <Text>❤️ {story.likes ? story.likes.length : 0}</Text>
+                        <Text>
+                          💬 {story.comments ? story.comments.length : 0}
+                        </Text>
+                      </HStack>
                     </Flex>
+
+                    {/* ===== DESCRIPTION PREVIEW ===== */}
+                    <Box mb={4}>
+                      <Text
+                        fontSize="14px"
+                        color={textColor}
+                        lineHeight="tall"
+                        noOfLines={
+                          expandedStories.has(story._id) ? undefined : 3
+                        }
+                      >
+                        {story.description}
+                      </Text>
+                      {story.description && story.description.length > 150 && (
+                        <Button
+                          variant="link"
+                          size="sm"
+                          mt={1}
+                          onClick={() => toggleExpand(story._id)}
+                        >
+                          {expandedStories.has(story._id)
+                            ? 'Show less'
+                            : 'Show more'}
+                        </Button>
+                      )}
+                    </Box>
+
+                    {/* ===== FILE SECTION ===== */}
+                    {story.textFile && (
+                      <Box mb={4}>
+                        <Text fontSize="13px" fontWeight="600" mb={2}>
+                          Attached file:
+                        </Text>
+                        <HStack spacing={2} wrap="wrap">
+                          <Text fontSize="13px" color="gray.600">
+                            {story.textFile.split('/').pop()}
+                          </Text>
+                          <Button
+                            as="a"
+                            href={`${baseUrl}/${story.textFile}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            size="sm"
+                            colorScheme="blue"
+                          >
+                            Preview
+                          </Button>
+                          <Button
+                            as="a"
+                            href={`${baseUrl}/${story.textFile}`}
+                            download
+                            size="sm"
+                          >
+                            Download
+                          </Button>
+                        </HStack>
+                      </Box>
+                    )}
 
                     <Divider mb={4} />
 
