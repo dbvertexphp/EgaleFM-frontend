@@ -31,6 +31,7 @@ import Topic from 'views/admin/topic.jsx';
 import SignInCentered from 'views/auth/signIn';
 import { FaUsersCog, FaWallet } from 'react-icons/fa';
 import StoryManagement from 'views/admin/Story-Mangemnet/Story-managmenet';
+import AudioStudio from 'views/admin/AudioStudio/AudioStudio';
 
 const routes = [
   {
@@ -100,7 +101,15 @@ const routes = [
     path: '/story-management',
     component: <StoryManagement />,
   },
-
+  {
+    name: 'Audio Studio',
+    layout: '/admin',
+    icon: (
+      <Icon as={MdSubscriptions} width="20px" height="20px" color="inherit" />
+    ),
+    path: '/audio-studio',
+    component: <AudioStudio />,
+  },
   {
     name: 'Subscriptions',
     layout: '/admin',
