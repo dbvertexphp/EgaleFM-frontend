@@ -133,11 +133,11 @@ export default function UserStoriesPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f5f5f5' }}>
+                <th style={thStyle}>Category</th>
                 <th style={thStyle}>Title</th>
+                <th style={thStyle}>Description</th>
                 <th style={thStyle}>Cover</th>
                 <th style={thStyle}>Status</th>
-                <th style={thStyle}>Likes</th>
-                <th style={thStyle}>Comments</th>
                 <th style={thStyle}>Chapters</th>
                 <th style={thStyle}>Update</th>
                 <th style={thStyle}>Preview</th>
@@ -147,8 +147,15 @@ export default function UserStoriesPage() {
             <tbody>
               {stories.map((story) => (
                 <tr key={story._id} style={{ borderBottom: '1px solid #ddd' }}>
+                  {/* CATEGORY */}
+                  <td style={tdStyle}>
+                    <Badge colorScheme="purple">
+                      {story.category?.name || 'N/A'}
+                    </Badge>
+                  </td>
                   {/* TITLE */}
                   <td style={tdStyle}>{story.title}</td>
+                  <td style={tdStyle}>{story.description}</td>
 
                   {/* COVER */}
                   <td style={tdStyle}>
@@ -171,15 +178,6 @@ export default function UserStoriesPage() {
                     </Badge>
                   </td>
 
-                  {/* LIKES */}
-                  <td style={tdStyle}>❤️ {story.likes?.length || 0}</td>
-
-                  {/* COMMENTS */}
-                  <td style={tdStyle}>💬 {story.comments?.length || 0}</td>
-
-                  {/* CHAPTER COUNT */}
-                  <td style={tdStyle}>📚 {story.chapters?.length || 0}</td>
-
                   {/* UPDATE STATUS */}
                   <td style={tdStyle}>
                     <Select
@@ -194,17 +192,42 @@ export default function UserStoriesPage() {
                     </Select>
                   </td>
 
-                  {/* PREVIEW FILE */}
                   <td style={tdStyle}>
+                    <Flex align="center" gap={3}>
+                      <Badge
+                        colorScheme="purple"
+                        borderRadius="full"
+                        px={3}
+                        py={1}
+                      >
+                        📚 {story.chapters?.length || 0}
+                      </Badge>
+
+                      {story.textFile && (
+                        <Button
+                          size="sm"
+                          colorScheme="blue"
+                          variant="outline"
+                          onClick={() =>
+                            navigate(`/admin/story/${story._id}/chapters`)
+                          }
+                        >
+                          View Chapters
+                        </Button>
+                      )}
+                    </Flex>
+                  </td>
+                  {/* PREVIEW FILE */}
+                  <td>
                     {story.textFile && (
                       <Button
-                        as="a"
-                        href={`${baseUrl}/${story.textFile}`}
-                        target="_blank"
                         size="sm"
-                        colorScheme="blue"
+                        colorScheme="green"
+                        onClick={() =>
+                          window.open(`${baseUrl}${story.textFile}`, '_blank')
+                        }
                       >
-                        View
+                        Preview
                       </Button>
                     )}
                   </td>

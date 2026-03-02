@@ -33,6 +33,7 @@ import { FaUsersCog, FaWallet } from 'react-icons/fa';
 import StoryManagement from 'views/admin/Story-Mangemnet/Story-managmenet';
 import AudioStudio from 'views/admin/AudioStudio/AudioStudio';
 import UserStoriesPage from 'views/admin/Story-Mangemnet/UserStoriesPage';
+import StoryChaptersPage from 'views/admin/Story-Mangemnet/StoryChaptersPage';
 
 const routes = [
   {
@@ -109,6 +110,13 @@ const routes = [
     component: <UserStoriesPage />,
     showInSidebar: false,
   },
+  {
+  name: 'Story Chapters',
+  layout: '/admin',
+  path: '/story/:storyId/chapters',
+  component: <StoryChaptersPage />,
+  showInSidebar: false, // Sidebar me nahi dikhega
+},
   {
     name: 'Audio Studio',
     layout: '/admin',

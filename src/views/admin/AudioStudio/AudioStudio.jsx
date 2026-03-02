@@ -20,6 +20,8 @@ import {
   IconButton,
 } from '@chakra-ui/react';
 import { DownloadIcon } from '@chakra-ui/icons';
+import { ArrowBackIcon } from '@chakra-ui/icons';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 export default function AudioStudio() {
@@ -37,6 +39,7 @@ export default function AudioStudio() {
       CONFIG & HOOKS
   =============================== */
   const toast = useToast();
+  const navigate = useNavigate();
   const cardBg = useColorModeValue('white', 'gray.800');
   const playerBg = useColorModeValue('gray.50', 'gray.700');
 
@@ -172,10 +175,33 @@ export default function AudioStudio() {
     padding: '10px',
   };
   return (
-    <Box p={{ base: '20px', md: '40px' }}>
-      <Text fontSize="28px" fontWeight="bold" mb={8}>
-        Audio Studio 🎧
-      </Text>
+    <Box mt={{ base: '110px', md: '130px' }} px={{ base: '20px', md: '40px' }}>
+      <Flex justify="space-between" align="center" mb={10} wrap="wrap" gap={4}>
+        <HStack spacing={4}>
+          <Button
+            leftIcon={<ArrowBackIcon />}
+            variant="outline"
+            borderRadius="full"
+            onClick={() => navigate(-1)}
+          >
+            Back
+          </Button>
+
+          <Text fontSize="28px" fontWeight="800">
+            Audio Studio 🎧
+          </Text>
+        </HStack>
+
+        <Badge
+          colorScheme="purple"
+          fontSize="14px"
+          px={4}
+          py={2}
+          borderRadius="full"
+        >
+          {stories.length} Stories
+        </Badge>
+      </Flex>
 
       <Box overflowX="auto">
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
