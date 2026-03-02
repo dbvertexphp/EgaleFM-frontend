@@ -93,10 +93,19 @@ export default function UserStoriesPage() {
         <Spinner size="xl" thickness="4px" color="blue.500" />
       </Flex>
     );
+  const thStyle = {
+    padding: '12px',
+    textAlign: 'left',
+    borderBottom: '2px solid #ddd',
+    fontWeight: '600',
+  };
 
+  const tdStyle = {
+    padding: '12px',
+  };
   return (
     <Card p="30px" mt="80px">
-      {/* ===== Header Section ===== */}
+      {/* HEADER */}
       <Flex justify="space-between" align="center" mb={8}>
         <HStack spacing={4}>
           <IconButton
@@ -110,13 +119,7 @@ export default function UserStoriesPage() {
           </Text>
         </HStack>
 
-        <Badge
-          colorScheme="blue"
-          fontSize="14px"
-          px={4}
-          py={2}
-          borderRadius="full"
-        >
+        <Badge colorScheme="blue" px={4} py={2} borderRadius="full">
           {stories.length} Total
         </Badge>
       </Flex>
@@ -126,134 +129,90 @@ export default function UserStoriesPage() {
           <Text color="gray.500">No stories found</Text>
         </Flex>
       ) : (
-        <VStack spacing={8} align="stretch">
-          {stories.map((story) => (
-            <Box
-              key={story._id}
-              bg={bgCard}
-              border="1px solid"
-              borderColor={borderColor}
-              borderRadius="xl"
-              p={6}
-              shadow="sm"
-              _hover={{ shadow: 'md' }}
-              transition="0.3s"
-            >
-              {/* Title + Status */}
-              <Flex justify="space-between" align="center" mb={3}>
-                <Text fontSize="20px" fontWeight="700">
-                  {story.title}
-                </Text>
+        <Box overflowX="auto">
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f5f5f5' }}>
+                <th style={thStyle}>Title</th>
+                <th style={thStyle}>Cover</th>
+                <th style={thStyle}>Status</th>
+                <th style={thStyle}>Likes</th>
+                <th style={thStyle}>Comments</th>
+                <th style={thStyle}>Chapters</th>
+                <th style={thStyle}>Update</th>
+                <th style={thStyle}>Preview</th>
+              </tr>
+            </thead>
 
-                <Badge
-                  colorScheme={getStatusColor(story.status)}
-                  fontSize="13px"
-                  px={3}
-                  py={1}
-                  borderRadius="full"
-                >
-                  {story.status.toUpperCase()}
-                </Badge>
-              </Flex>
+            <tbody>
+              {stories.map((story) => (
+                <tr key={story._id} style={{ borderBottom: '1px solid #ddd' }}>
+                  {/* TITLE */}
+                  <td style={tdStyle}>{story.title}</td>
 
-              {/* Cover Image */}
-              {story.coverImage && (
-                <Box mt={4}>
-                  <Image
-                    src={`${baseUrl}${story.coverImage}`}
-                    alt="cover"
-                    borderRadius="lg"
-                    w="100%"
-                    maxH="280px"
-                    objectFit="cover"
-                    fallbackSrc="https://via.placeholder.com/800x400?text=No+Image"
-                  />
-                </Box>
-              )}
+                  {/* COVER */}
+                  <td style={tdStyle}>
+                    {story.coverImage ? (
+                      <Image
+                        src={`${baseUrl}${story.coverImage}`}
+                        boxSize="80px"
+                        objectFit="cover"
+                        borderRadius="md"
+                      />
+                    ) : (
+                      'No Image'
+                    )}
+                  </td>
 
-              {/* Description */}
-              <Text mt={4} color="gray.600">
-                {story.description}
-              </Text>
+                  {/* STATUS BADGE */}
+                  <td style={tdStyle}>
+                    <Badge colorScheme={getStatusColor(story.status)}>
+                      {story.status.toUpperCase()}
+                    </Badge>
+                  </td>
 
-              {/* Stats */}
-              <HStack mt={4} spacing={6}>
-                <Badge colorScheme="pink">❤️ {story.likes?.length || 0}</Badge>
-                <Badge colorScheme="blue">
-                  💬 {story.comments?.length || 0}
-                </Badge>
-                <Badge colorScheme="purple">
-                  📚 {story.chapters?.length || 0} Chapters
-                </Badge>
-              </HStack>
+                  {/* LIKES */}
+                  <td style={tdStyle}>❤️ {story.likes?.length || 0}</td>
 
-              {/* Chapters */}
-              {story.chapters?.length > 0 && (
-                <Box mt={6}>
-                  <Text fontWeight="700" mb={3}>
-                    Chapters
-                  </Text>
+                  {/* COMMENTS */}
+                  <td style={tdStyle}>💬 {story.comments?.length || 0}</td>
 
-                  <VStack spacing={4} align="stretch">
-                    {story.chapters.map((chapter, i) => (
-                      <Box
-                        key={i}
-                        p={4}
-                        borderWidth="1px"
-                        borderRadius="lg"
-                        bg="gray.50"
+                  {/* CHAPTER COUNT */}
+                  <td style={tdStyle}>📚 {story.chapters?.length || 0}</td>
+
+                  {/* UPDATE STATUS */}
+                  <td style={tdStyle}>
+                    <Select
+                      size="sm"
+                      value={story.status}
+                      isDisabled={updatingId === story._id}
+                      onChange={(e) => updateStatus(story._id, e.target.value)}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                    </Select>
+                  </td>
+
+                  {/* PREVIEW FILE */}
+                  <td style={tdStyle}>
+                    {story.textFile && (
+                      <Button
+                        as="a"
+                        href={`${baseUrl}/${story.textFile}`}
+                        target="_blank"
+                        size="sm"
+                        colorScheme="blue"
                       >
-                        <Text fontWeight="600">{chapter.title}</Text>
-                        <Text fontSize="14px" color="gray.600">
-                          {chapter.description}
-                        </Text>
-
-                        {chapter.image && (
-                          <Image
-                            mt={3}
-                            src={`${baseUrl}${chapter.image}`}
-                            borderRadius="md"
-                            maxH="180px"
-                            objectFit="cover"
-                            fallbackSrc="https://via.placeholder.com/600x300?text=No+Image"
-                          />
-                        )}
-                      </Box>
-                    ))}
-                  </VStack>
-                </Box>
-              )}
-
-              <Divider my={6} />
-
-              {/* Status Update */}
-              <HStack spacing={4}>
-                <Select
-                  maxW="220px"
-                  value={story.status}
-                  isDisabled={updatingId === story._id}
-                  onChange={(e) => updateStatus(story._id, e.target.value)}
-                >
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </Select>
-
-                {story.textFile && (
-                  <Button
-                    as="a"
-                    href={`${baseUrl}/${story.textFile}`}
-                    target="_blank"
-                    size="sm"
-                    colorScheme="blue"
-                  >
-                    Preview File
-                  </Button>
-                )}
-              </HStack>
-            </Box>
-          ))}
-        </VStack>
+                        View
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Box>
       )}
     </Card>
   );
