@@ -2,286 +2,357 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Text,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Button,
+  VStack,
   Badge,
-  useToast,
-  Spinner,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  ModalCloseButton,
-  Input,
-  Textarea,
-  useDisclosure,
+  Button,
+  HStack,
   Flex,
+  Input,
+  Spinner,
+  useToast,
+  Divider,
+  useColorModeValue,
+  Alert,
+  AlertIcon,
+  Switch,
+  FormControl,
+  FormLabel,
+  IconButton,
 } from '@chakra-ui/react';
+import { DownloadIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 
-/* 🔥 IMPORTANT FIX
-   .env ko touch nahi karna
-   Isliye yaha manually /api add kar rahe hain
-*/
-const RAW_BASE_URL = process.env.REACT_APP_BASE_URL?.replace(/\/$/, '');
-const API_BASE_URL = `${RAW_BASE_URL}/api`;
-
 export default function AudioStudio() {
+  /* ===============================
+      STATE
+  =============================== */
   const [stories, setStories] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [selectedStory, setSelectedStory] = useState(null);
-  const [audioTitle, setAudioTitle] = useState('');
-  const [audioDescription, setAudioDescription] = useState('');
-  const [audioFile, setAudioFile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [uploadingId, setUploadingId] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState({});
+  // Track desired publish status for each story (not yet saved to DB)
+  const [publishStatuses, setPublishStatuses] = useState({});
 
+  /* ===============================
+      CONFIG & HOOKS
+  =============================== */
   const toast = useToast();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const token = localStorage.getItem('token');
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const playerBg = useColorModeValue('gray.50', 'gray.700');
 
-  // ✅ Fetch Approved Stories
-  const fetchApprovedStories = useCallback(async () => {
+  const RAW_BASE_URL =
+    process.env.REACT_APP_BASE_URL?.replace(/\/$/, '') ||
+    'http://localhost:3030';
+  const API_BASE = `${RAW_BASE_URL}/api`;
+  const token = localStorage.getItem('token');
+  const headers = { Authorization: `Bearer ${token}` };
+
+  /* ===============================
+      FETCH STORIES
+  =============================== */
+  const fetchStories = useCallback(async () => {
+    if (!token) return;
     try {
       setLoading(true);
-
-      const res = await axios.get(
-        `${API_BASE_URL}/admin/user-stories?status=approved`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-
-      setStories(res.data.data || []);
-    } catch (error) {
-      toast({
-        title: 'Error fetching stories',
-        description: error.response?.data?.message,
-        status: 'error',
+      const res = await axios.get(`${API_BASE}/admin/user-stories`, {
+        headers,
       });
+      if (res.data?.success) setStories(res.data.data || []);
+    } catch (error) {
+      toast({ title: 'Fetch failed', status: 'error', duration: 3000 });
     } finally {
       setLoading(false);
     }
-  }, [token, toast]);
+  }, [API_BASE, token, toast]);
 
   useEffect(() => {
-    fetchApprovedStories();
-  }, [fetchApprovedStories]);
+    fetchStories();
+  }, [fetchStories]);
 
-  const handleOpenModal = (story) => {
-    setSelectedStory(story);
-    setAudioTitle('');
-    setAudioDescription('');
-    setAudioFile(null);
-    onOpen();
+  /* ===============================
+      HANDLERS
+  =============================== */
+
+  const handleFileChange = (e, storyId) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFiles((prev) => ({ ...prev, [storyId]: file }));
+    }
   };
 
-  const handleUploadAudio = async () => {
-    if (!audioTitle || !audioDescription || !audioFile) {
-      toast({
-        title: 'All fields are required',
-        status: 'warning',
-      });
-      return;
-    }
+  // Update desired publish status for a story (preview state, not saved yet)
+  const handlePublishStatusChange = (storyId, isChecked) => {
+    setPublishStatuses((prev) => ({
+      ...prev,
+      [storyId]: isChecked,
+    }));
+  };
+
+  const handleConfirmUpload = async (storyId) => {
+    const file = selectedFiles[storyId];
+    if (!file) return;
+
+    const isPublished =
+      publishStatuses[storyId] !== undefined ? publishStatuses[storyId] : false;
+
+    const formData = new FormData();
+    formData.append('audioTitle', 'Audio Version');
+    formData.append('audioDescription', 'Converted to audio');
+    formData.append('audioFile', file);
+    formData.append('isAudioPublished', isPublished ? 'true' : 'false');
 
     try {
-      setUploading(true);
+      setUploadingId(storyId);
 
-      const formData = new FormData();
-      formData.append('audioTitle', audioTitle);
-      formData.append('audioDescription', audioDescription);
-      formData.append('audio', audioFile);
-
-      await axios.put(
-        `${API_BASE_URL}/admin/story/${selectedStory._id}/upload-audio`,
+      const res = await axios.put(
+        `${API_BASE}/admin/story/${storyId}/upload-audio`,
         formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+        { headers },
       );
 
-      toast({
-        title: 'Story converted to Audio & Published 🎧',
-        status: 'success',
+      if (res.data.success) {
+        toast({
+          title: res.data.message,
+          status: 'success',
+          duration: 3000,
+        });
+
+        // 🔥 INSTANT UI UPDATE
+        setStories((prev) =>
+          prev.map((story) => (story._id === storyId ? res.data.data : story)),
+        );
+      }
+
+      // reset preview
+      setSelectedFiles((prev) => {
+        const copy = { ...prev };
+        delete copy[storyId];
+        return copy;
       });
 
-      onClose();
-      fetchApprovedStories();
-    } catch (error) {
+      setPublishStatuses((prev) => {
+        const copy = { ...prev };
+        delete copy[storyId];
+        return copy;
+      });
+    } catch (err) {
       toast({
-        title: 'Upload failed',
-        description: error.response?.data?.message,
+        title: err.response?.data?.message || 'Upload failed',
         status: 'error',
+        duration: 3000,
       });
     } finally {
-      setUploading(false);
+      setUploadingId(null);
     }
   };
 
-  const handleUnpublishAudio = async (storyId) => {
-    try {
-      await axios.put(
-        `${API_BASE_URL}/admin/story/${storyId}/unpublish-audio`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-
-      toast({
-        title: 'Audio Unpublished Successfully',
-        status: 'success',
-      });
-
-      fetchApprovedStories();
-    } catch (error) {
-      toast({
-        title: 'Unpublish failed',
-        description: error.response?.data?.message,
-        status: 'error',
-      });
-    }
-  };
+  /* ===============================
+      UI RENDERING
+  =============================== */
+  if (!token)
+    return (
+      <Alert status="error" mt="50px">
+        <AlertIcon />
+        Unauthorized. Login again.
+      </Alert>
+    );
+  if (loading)
+    return (
+      <Flex justify="center" mt="100px">
+        <Spinner size="xl" />
+      </Flex>
+    );
 
   return (
-    <Box p="20px">
-      <Text fontSize="2xl" fontWeight="bold" mb="20px">
+    <Box p={{ base: '20px', md: '40px' }}>
+      <Text fontSize="28px" fontWeight="bold" mb={8}>
         Audio Studio 🎧
       </Text>
 
-      {loading ? (
-        <Flex justify="center" mt="40px">
-          <Spinner size="lg" />
-        </Flex>
-      ) : (
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>Story</Th>
-              <Th>User</Th>
-              <Th>Status</Th>
-              <Th>Audio</Th>
-              <Th>Action</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {stories.map((story) => (
-              <Tr key={story._id}>
-                <Td>{story.title}</Td>
-                <Td>{story.user?.name}</Td>
-                <Td>
-                  <Badge colorScheme="green">Approved</Badge>
-                </Td>
+      <VStack spacing={6} align="stretch">
+        {stories.map((story) => {
+          const previewFile = selectedFiles[story._id];
+          const previewUrl = previewFile
+            ? URL.createObjectURL(previewFile)
+            : null;
+          const serverAudioUrl = story.audioFile
+            ? `${RAW_BASE_URL}${story.audioFile}`
+            : null;
+          const activeAudioSrc = previewUrl || serverAudioUrl;
+          const isPreviewingFile = selectedFiles[story._id];
 
-                <Td>
-                  {story.isAudioPublished ? (
-                    <Box>
-                      <Badge colorScheme="blue" mb="2">
-                        Published
-                      </Badge>
-
-                      {/* Audio Player */}
-                      <audio
-                        controls
-                        controlsList="nodownload"
-                        style={{ width: '220px', marginTop: '6px' }}
-                        src={`${RAW_BASE_URL}${story.audioFile}`}
-                      />
-
-                      {/* Download Button */}
-                      <Box mt="2">
-                        <Button
-                          size="xs"
-                          colorScheme="green"
-                          as="a"
-                          href={`${RAW_BASE_URL}${story.audioFile}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Download
-                        </Button>
-                      </Box>
-                    </Box>
-                  ) : (
-                    <Badge colorScheme="gray">Not Uploaded</Badge>
-                  )}
-                </Td>
-
-                <Td>
-                  {story.isAudioPublished ? (
-                    <Button
-                      size="sm"
-                      colorScheme="red"
-                      onClick={() => handleUnpublishAudio(story._id)}
-                    >
-                      Unpublish
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      colorScheme="purple"
-                      onClick={() => handleOpenModal(story)}
-                    >
-                      Upload Audio
-                    </Button>
-                  )}
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      )}
-
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Publish Audio</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Input
-              placeholder="Audio Title"
-              mb="10px"
-              value={audioTitle}
-              onChange={(e) => setAudioTitle(e.target.value)}
-            />
-
-            <Textarea
-              placeholder="Audio Description"
-              mb="10px"
-              value={audioDescription}
-              onChange={(e) => setAudioDescription(e.target.value)}
-            />
-
-            <Input
-              type="file"
-              accept="audio/*"
-              onChange={(e) => setAudioFile(e.target.files[0])}
-            />
-          </ModalBody>
-
-          <ModalFooter>
-            <Button mr={3} onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              colorScheme="purple"
-              onClick={handleUploadAudio}
-              isLoading={uploading}
+          return (
+            <Box
+              key={story._id}
+              p={6}
+              borderWidth="1px"
+              borderRadius="xl"
+              bg={cardBg}
+              shadow="md"
             >
-              Publish Audio
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+              <Flex justify="space-between" align="center" mb={4}>
+                <Box>
+                  <Text fontSize="18px" fontWeight="600">
+                    {story.title}
+                  </Text>
+                  <Badge
+                    colorScheme={
+                      isPreviewingFile
+                        ? publishStatuses[story._id]
+                          ? 'green'
+                          : 'gray'
+                        : story.isAudioPublished
+                          ? 'green'
+                          : 'gray'
+                    }
+                  >
+                    {isPreviewingFile
+                      ? publishStatuses[story._id]
+                        ? 'LIVE (Preview)'
+                        : 'DRAFT (Preview)'
+                      : story.isAudioPublished
+                        ? 'LIVE'
+                        : 'DRAFT'}
+                  </Badge>
+                </Box>
+
+                {/* Publish Toggle - Only shown when file selected (preview mode) */}
+                {isPreviewingFile && (
+                  <FormControl display="flex" alignItems="center" width="auto">
+                    <FormLabel
+                      htmlFor={`pub-${story._id}`}
+                      mb="0"
+                      fontSize="sm"
+                      fontWeight="bold"
+                    >
+                      Publish on Upload
+                    </FormLabel>
+                    <Switch
+                      id={`pub-${story._id}`}
+                      colorScheme="green"
+                      isChecked={
+                        publishStatuses[story._id] !== undefined
+                          ? publishStatuses[story._id]
+                          : false
+                      }
+                      onChange={(e) =>
+                        handlePublishStatusChange(story._id, e.target.checked)
+                      }
+                    />
+                  </FormControl>
+                )}
+              </Flex>
+
+              <HStack spacing={4} mb={6}>
+                {story.textFile && (
+                  <Button
+                    as="a"
+                    href={`${RAW_BASE_URL}${story.textFile}`}
+                    target="_blank"
+                    size="sm"
+                    colorScheme="blue"
+                    variant="ghost"
+                  >
+                    Preview Text
+                  </Button>
+                )}
+
+                <Input
+                  type="file"
+                  accept="audio/*"
+                  onChange={(e) => handleFileChange(e, story._id)}
+                  display="none"
+                  id={`file-${story._id}`}
+                />
+                <Button
+                  as="label"
+                  htmlFor={`file-${story._id}`}
+                  size="sm"
+                  variant="outline"
+                  cursor="pointer"
+                >
+                  {story.audioFile ? 'Change Audio' : 'Select Audio'}
+                </Button>
+
+                {previewFile && (
+                  <Button
+                    size="sm"
+                    colorScheme="green"
+                    onClick={() => handleConfirmUpload(story._id)}
+                    isLoading={uploadingId === story._id}
+                  >
+                    Upload
+                  </Button>
+                )}
+              </HStack>
+
+              {/* Audio Player Box */}
+              {/* {activeAudioSrc && (
+                <Box
+                  p={4}
+                  bg={playerBg}
+                  borderRadius="lg"
+                  borderLeft="4px solid"
+                  borderColor="teal.400"
+                >
+                  <Text
+                    fontSize="xs"
+                    fontWeight="bold"
+                    mb={2}
+                    color="teal.500"
+                    letterSpacing="wider"
+                  >
+                    {previewUrl ? 'PREVIEW MODE (NOT SAVED)' : 'ACTIVE AUDIO'}
+                  </Text>
+                  <Flex align="center" gap={4}>
+                    <audio
+                      key={activeAudioSrc}
+                      controls
+                      style={{ flex: 1, height: '40px' }}
+                    >
+                      <source src={activeAudioSrc} />
+                    </audio>
+
+                    <IconButton
+                      as="a"
+                      href={activeAudioSrc}
+                      download={`audio-${story.title}.mp3`}
+                      icon={<DownloadIcon />}
+                      aria-label="Download"
+                      colorScheme="teal"
+                      size="md"
+                      isRound
+                    />
+                  </Flex>
+                </Box>
+              )} */}
+
+              {story.audioFile && (
+                <Box
+                  p={4}
+                  bg={playerBg}
+                  borderRadius="lg"
+                  borderLeft="4px solid"
+                  borderColor="green.400"
+                >
+                  <Text
+                    fontSize="xs"
+                    fontWeight="bold"
+                    mb={2}
+                    color="green.500"
+                  >
+                    {story.isAudioPublished ? 'LIVE AUDIO' : 'DRAFT AUDIO'}
+                  </Text>
+
+                  <audio controls style={{ width: '100%' }}>
+                    <source src={`${RAW_BASE_URL}${story.audioFile}`} />
+                  </audio>
+                </Box>
+              )}
+            </Box>
+          );
+        })}
+      </VStack>
     </Box>
   );
 }

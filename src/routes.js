@@ -32,6 +32,7 @@ import SignInCentered from 'views/auth/signIn';
 import { FaUsersCog, FaWallet } from 'react-icons/fa';
 import StoryManagement from 'views/admin/Story-Mangemnet/Story-managmenet';
 import AudioStudio from 'views/admin/AudioStudio/AudioStudio';
+import UserStoriesPage from 'views/admin/Story-Mangemnet/UserStoriesPage';
 
 const routes = [
   {
@@ -100,6 +101,13 @@ const routes = [
     ),
     path: '/story-management',
     component: <StoryManagement />,
+  },
+  {
+    name: 'User Stories',
+    layout: '/admin',
+    path: '/user-stories/:userId',
+    component: <UserStoriesPage />,
+    showInSidebar: false,
   },
   {
     name: 'Audio Studio',
