@@ -140,7 +140,7 @@ export default function UserStoriesPage() {
                 <th style={thStyle}>Status</th>
                 <th style={thStyle}>Chapters</th>
                 <th style={thStyle}>Update</th>
-                <th style={thStyle}>Preview</th>
+                <th style={thStyle}>File</th>
               </tr>
             </thead>
 
@@ -227,7 +227,7 @@ export default function UserStoriesPage() {
                           window.open(`${baseUrl}${story.textFile}`, '_blank')
                         }
                       >
-                        Preview
+                        Open
                       </Button>
                     )}
                   </td>
