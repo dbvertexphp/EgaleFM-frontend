@@ -39,7 +39,7 @@ export default function SubscriptionPlans() {
   const fetchPlans = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${baseUrl}api/plans/admin/all-plans`, {
+      const response = await axios.get(`${baseUrl}/api/plans/admin/all-plans`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.data.status) {
@@ -103,10 +103,10 @@ export default function SubscriptionPlans() {
       };
 
       // Match your backend route structure
-      const url = editingPlan 
-        ? `${baseUrl}api/plans/update-plan/${editingPlan._id}` 
-        : `${baseUrl}api/plans/create-plan`;
-      
+      const url = editingPlan
+        ? `${baseUrl}/api/plans/update-plan/${editingPlan._id}`
+        : `${baseUrl}/api/plans/create-plan`;
+
       const method = editingPlan ? 'put' : 'post';
 
       const response = await axios[method](url, payload, {

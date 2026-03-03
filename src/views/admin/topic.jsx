@@ -84,7 +84,7 @@ export default function TopicManagement() {
     const fetchData = async () => {
       try {
         const [catRes] = await Promise.all([
-          axios.get(`${baseUrl}api/admin/categories`, { headers }),
+          axios.get(`${baseUrl}/api/admin/categories`, { headers }),
         ]);
 
         setCategories(catRes.data.data || []);
@@ -108,7 +108,7 @@ export default function TopicManagement() {
 
     try {
       const res = await axios.get(
-        `${baseUrl}api/admin/story-chapters/category/${categoryId}`,
+        `${baseUrl}/api/admin/story-chapters/category/${categoryId}`,
         { headers },
       );
 
@@ -122,12 +122,14 @@ export default function TopicManagement() {
   const fetchAllTopics = async () => {
     try {
       const url = formData.chapterId
-        ? `${baseUrl}api/admin/story-topics/chapter/${formData.chapterId}`
-        : `${baseUrl}api/admin/story-topics`;
+        ? `${baseUrl}/api/admin/story-topics/chapter/${formData.chapterId}`
+        : `${baseUrl}/api/admin/story-topics`;
 
       const res = await axios.get(url, { headers });
       setTopics(res.data.data || []);
-    } catch {}
+    } catch (err) {
+      toast({ title: 'Failed to load topics', status: 'error' });
+    }
   };
 
   // 🔹 CREATE TOPIC (FormData + Audio)
@@ -147,7 +149,7 @@ export default function TopicManagement() {
       payload.append('storyChapter', formData.chapterId);
       payload.append('audio', audioFile);
 
-      await axios.post(`${baseUrl}api/admin/story-topics`, payload, {
+      await axios.post(`${baseUrl}/api/admin/story-topics`, payload, {
         headers,
       });
 
@@ -185,7 +187,7 @@ export default function TopicManagement() {
       }
 
       await axios.patch(
-        `${baseUrl}api/admin/story-topics/${editData._id}`,
+        `${baseUrl}/api/admin/story-topics/${editData._id}`,
         payload,
         { headers },
       );
@@ -201,7 +203,7 @@ export default function TopicManagement() {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this topic?')) return;
     try {
-      await axios.delete(`${baseUrl}api/admin/story-topics/${id}`, { headers });
+      await axios.delete(`${baseUrl}/api/admin/story-topics/${id}`, { headers });
       toast({ title: 'Topic deleted', status: 'info' });
       fetchAllTopics();
     } catch {

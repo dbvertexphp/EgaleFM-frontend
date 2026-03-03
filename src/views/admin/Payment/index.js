@@ -50,7 +50,7 @@ export default function SubscriptionHistory() {
     try {
       setLoading(true);
 
-      const response = await axios.get(`${baseUrl}api/admin/payments-list`, {
+      const response = await axios.get(`${baseUrl}/api/admin/payments-list`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

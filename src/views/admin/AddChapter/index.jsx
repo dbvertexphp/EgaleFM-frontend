@@ -699,7 +699,7 @@ export default function ChapterManagement() {
       setLoading(true);
 
       // Always load categories
-      const categoryRes = await axios.get(`${baseUrl}api/admin/categories`, {
+      const categoryRes = await axios.get(`${baseUrl}/api/admin/categories`, {
         headers,
       });
       setCategories(categoryRes.data.data || []);
@@ -707,8 +707,8 @@ export default function ChapterManagement() {
       // 🔥 If category selected → filter
       // 🔥 Else → load all chapters
       const chapterUrl = formData.storyCategory
-        ? `${baseUrl}api/admin/story-chapters/category/${formData.storyCategory}`
-        : `${baseUrl}api/admin/story-chapters`;
+        ? `${baseUrl}/api/admin/story-chapters/category/${formData.storyCategory}`
+        : `${baseUrl}/api/admin/story-chapters`;
 
       const chapterRes = await axios.get(chapterUrl, { headers });
 
@@ -752,7 +752,7 @@ export default function ChapterManagement() {
         payload.append('image', chapterImage);
       }
 
-      await axios.post(`${baseUrl}api/admin/story-chapters`, payload, {
+      await axios.post(`${baseUrl}/api/admin/story-chapters`, payload, {
         headers,
       });
 
@@ -788,7 +788,7 @@ export default function ChapterManagement() {
       }
 
       await axios.patch(
-        `${baseUrl}api/admin/story-chapters/${editData._id}`,
+        `${baseUrl}/api/admin/story-chapters/${editData._id}`,
         payload,
         {
           headers: {
@@ -814,7 +814,7 @@ export default function ChapterManagement() {
     if (!window.confirm('Are you sure?')) return;
 
     try {
-      await axios.delete(`${baseUrl}api/admin/story-chapters/${id}`, {
+      await axios.delete(`${baseUrl}/api/admin/story-chapters/${id}`, {
         headers,
       });
       toast({ title: 'Deleted', status: 'info' });
