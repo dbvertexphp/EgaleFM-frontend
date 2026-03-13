@@ -249,7 +249,7 @@ function SignIn() {
         password: password,
       };
 
-      const response = await axios.post(`${baseUrl}/api/admin/login`, payload, {
+      const response = await axios.post(`${baseUrl}api/admin/login`, payload, {
         headers: { 'Content-Type': 'application/json' },
       });
 
