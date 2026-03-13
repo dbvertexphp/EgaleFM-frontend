@@ -8,7 +8,7 @@ import {
   Button,
   Select,
   HStack,
-  Divider,
+  Switch,
   Flex,
   Image,
   useColorModeValue,
@@ -81,6 +81,44 @@ export default function UserStoriesPage() {
     }
   };
 
+  const togglePopular = async (storyId) => {
+    try {
+      const res = await axios.patch(
+        `${baseUrl}/api/admin/user-stories/${storyId}/popular`,
+        {},
+        { headers },
+      );
+
+      setStories((prev) =>
+        prev.map((s) =>
+          s._id === storyId ? { ...s, isPopular: res.data.isPopular } : s,
+        ),
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const toggleRecommended = async (storyId) => {
+    try {
+      const res = await axios.patch(
+        `${baseUrl}/api/admin/user-stories/${storyId}/recommended`,
+        {},
+        { headers },
+      );
+
+      setStories((prev) =>
+        prev.map((s) =>
+          s._id === storyId
+            ? { ...s, isRecommended: res.data.isRecommended }
+            : s,
+        ),
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const getStatusColor = (status) => {
     if (status === 'approved') return 'green';
     if (status === 'rejected') return 'red';
@@ -138,6 +176,8 @@ export default function UserStoriesPage() {
                 <th style={thStyle}>Description</th>
                 <th style={thStyle}>Cover</th>
                 <th style={thStyle}>Status</th>
+                <th style={thStyle}>Popular</th>
+                <th style={thStyle}>Recommended</th>
                 <th style={thStyle}>Chapters</th>
                 <th style={thStyle}>Update</th>
                 <th style={thStyle}>File</th>
@@ -177,7 +217,23 @@ export default function UserStoriesPage() {
                       {story.status.toUpperCase()}
                     </Badge>
                   </td>
+                  {/* POPULAR */}
+                  <td style={tdStyle}>
+                    <Switch
+                      colorScheme="blue"
+                      isChecked={story.isPopular}
+                      onChange={() => togglePopular(story._id)}
+                    />
+                  </td>
 
+                  {/* RECOMMENDED */}
+                  <td style={tdStyle}>
+                    <Switch
+                      colorScheme="green"
+                      isChecked={story.isRecommended}
+                      onChange={() => toggleRecommended(story._id)}
+                    />
+                  </td>
                   {/* UPDATE STATUS */}
                   <td style={tdStyle}>
                     <Select
